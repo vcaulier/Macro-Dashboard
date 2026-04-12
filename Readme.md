@@ -5,4 +5,9 @@ Personal macro trading dashboard, with :
 - Economic calendar
 - Forex sentiment
 
+This is a Docker project, launch with :
+```
+docker compose up -d
+```
+
 Spring Boot backend + Angular frontend.
