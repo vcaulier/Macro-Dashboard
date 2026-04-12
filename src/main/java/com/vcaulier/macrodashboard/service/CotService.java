@@ -96,6 +96,7 @@ public class CotService {
 
         LinkedList<CotRecord> result = this.getRawDataAsJson().stream()
             .map((JsonNode row) -> parseRow(row))
+            .filter(record -> record.getAsset() != null && record.getCategory() != null)
             .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
             .collect(Collectors.toCollection(LinkedList::new));
 
