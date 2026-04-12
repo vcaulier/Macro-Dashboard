@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.vcaulier.macrodashboard.model.CotAsset;
 import com.vcaulier.macrodashboard.model.CotRecord;
 
 import tools.jackson.databind.JsonNode;
@@ -53,8 +54,19 @@ public class CotService {
         }
     }
 
+    private CotAsset parseAsset(JsonNode row, String field) {
+        JsonNode node = row.get(field);
+        if (node == null || node.isNull()) return null;
+        try {
+            return CotAsset.fromMarketName(node.asText());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     private CotRecord parseRow(JsonNode row) {
         LocalDate date = parseDate(row, "report_date_as_yyyy_mm_dd");
+        CotAsset asset = parseAsset(row, "contract_market_name");
         long commercialLong = parseLong(row, "comm_positions_long_all");
         long commercialShort = parseLong(row, "comm_positions_short_all");
         long nonCommercialLong = parseLong(row, "noncomm_positions_long_all");
@@ -65,6 +77,8 @@ public class CotService {
 
         return new CotRecord(
             date,
+            asset,
+            asset != null ? asset.getCategory() : null,
             commercialLong,
             commercialShort,
             commercialLong - commercialShort,

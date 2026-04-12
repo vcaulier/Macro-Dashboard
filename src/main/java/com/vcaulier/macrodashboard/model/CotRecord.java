@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 public class CotRecord {
 
     private LocalDate date;
+    private CotAsset asset;
+    private String category;
     
     private long commercialLong;
     private long commercialShort;
