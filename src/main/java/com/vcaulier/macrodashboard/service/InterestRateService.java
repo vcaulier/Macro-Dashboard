@@ -19,6 +19,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.yaml.snakeyaml.util.Tuple;
 
 import com.vcaulier.macrodashboard.model.FinancialAsset;
 
@@ -35,6 +36,8 @@ public class InterestRateService {
      */
     @Value("${interest.rates.url}")
     private String INTEREST_RATES_BASE_URL;
+
+    private RestTemplate restTemplate = new RestTemplate();
 
     /**
      * Main data of this service, containing actual interest rates of the Forex market
@@ -57,13 +60,23 @@ public class InterestRateService {
 
     }
 
+    private Tuple<FinancialAsset, Double> parseRate(Element element) {
+        String refArea = element.getAttribute("REF_AREA");
+
+        Element obs = (Element) element.getElementsByTagName("Obs").item(0);
+        String interestRate = obs.getAttribute("OBS_VALUE");
+
+        FinancialAsset asset = FinancialAsset.fromCountryCode(refArea);
+
+        return new Tuple(asset, Double.parseDouble(interestRate));
+    }
+
     /**
      * Interest rates won't move frequently, this method updates interest rates, but only once a day
      */
     @Scheduled(cron = "0 0 2 * * *")
     private void updateInterestRates() throws ParserConfigurationException {
 
-        RestTemplate restTemplate = new RestTemplate();
         String xml = restTemplate.getForObject(INTEREST_RATES_BASE_URL, String.class);
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -77,14 +90,9 @@ public class InterestRateService {
 
             for (int i = 0; i<nodes.getLength(); i++) {
                 Element element = (Element) nodes.item(i);
-                String refArea = element.getAttribute("REF_AREA");
-
-                Element obs = (Element) element.getElementsByTagName("Obs").item(0);
-                String interestRate = obs.getAttribute("OBS_VALUE");
-
-                FinancialAsset asset = FinancialAsset.fromCountryCode(refArea);
-                if (asset != null) {
-                    rates.put(asset, Double.parseDouble(interestRate));
+                Tuple<FinancialAsset, Double> tuple = this.parseRate(element);
+                if (tuple._1() != null) {
+                    rates.put(tuple._1(), tuple._2());
                 }
             }
         } catch (ParserConfigurationException e) {
