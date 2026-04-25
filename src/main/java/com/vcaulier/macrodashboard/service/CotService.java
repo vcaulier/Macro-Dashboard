@@ -12,17 +12,28 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.vcaulier.macrodashboard.model.CotAsset;
 import com.vcaulier.macrodashboard.model.CotRecord;
+import com.vcaulier.macrodashboard.model.FinancialAsset;
 
 import tools.jackson.databind.JsonNode;
 
+/**
+ * Serving actual trading volumes with their directions, for main market participants
+ */
 @Service
 public class CotService {
 
+    /**
+     * Our JSON data source, providing actual volumes, for each market participants, for main financial assets
+     */
     @Value("${cftc.api.url}")
     private String CFTC_API_URL;
 
+    /**
+     * Getting raw JSON nodes from CFTC JSON url 
+     * 
+     * @return raw data, built from JSON nodes
+     */
     private List<JsonNode> getRawDataAsJson() {
 
         RestTemplate restTemplate = new RestTemplate();
@@ -34,6 +45,13 @@ public class CotService {
 
     }
 
+    /**
+     * Date from JSON node parser, parsing a field inside a JSON row
+     * 
+     * @param row A row as a JSON node, containing a field to lookup
+     * @param field Name and id of JSON field to lookup in this row 
+     * @return LocalDate value of a specific JsonNode field
+     */
     private LocalDate parseDate(JsonNode row, String field) {
         JsonNode node = row.get(field);
         if (node == null || node.isNull()) return null;
@@ -44,6 +62,13 @@ public class CotService {
         }
     }
 
+    /**
+     * Long from JSON node parser, parsing a field inside a JSON row
+     * 
+     * @param row A row as a JSON node, containing a field to lookup
+     * @param field Name and id of JSON field to lookup in this row 
+     * @return Long value of a specific JsonNode field
+     */
     private long parseLong(JsonNode row, String field) {
         JsonNode node = row.get(field);
         if (node == null || node.isNull()) return 0L;
@@ -54,19 +79,32 @@ public class CotService {
         }
     }
 
-    private CotAsset parseAsset(JsonNode row, String field) {
+    /**
+     * Financial asset from JSON node parser, parsing a field inside a JSON row
+     * 
+     * @param row A row as a JSON node, containing a field to lookup
+     * @param field Name and id of JSON field to lookup in this row 
+     * @return FinancialAsset value of a specific JsonNode field
+     */
+    private FinancialAsset parseAsset(JsonNode row, String field) {
         JsonNode node = row.get(field);
         if (node == null || node.isNull()) return null;
         try {
-            return CotAsset.fromMarketName(node.asText());
+            return FinancialAsset.fromMarketName(node.asText());
         } catch (IllegalArgumentException e) {
             return null;
         }
     }
 
+    /**
+     * CotRecord from JSON node parser, parsing a raw JSON node
+     * 
+     * @param row A row as a JSON node, containing all necessary fields to lookup
+     * @return CotRecord value of a specific JsonNode
+     */
     private CotRecord parseRow(JsonNode row) {
         LocalDate date = parseDate(row, "report_date_as_yyyy_mm_dd");
-        CotAsset asset = parseAsset(row, "contract_market_name");
+        FinancialAsset asset = parseAsset(row, "contract_market_name");
         long commercialLong = parseLong(row, "comm_positions_long_all");
         long commercialShort = parseLong(row, "comm_positions_short_all");
         long nonCommercialLong = parseLong(row, "noncomm_positions_long_all");
@@ -92,6 +130,11 @@ public class CotService {
         );
     }
 
+    /**
+     * CotRecords creation from raw JSON data
+     * 
+     * @return LinkedList of CotRecord, sorted by date
+     */
     public LinkedList<CotRecord> createCotRecords() {
 
         LinkedList<CotRecord> result = this.getRawDataAsJson().stream()
