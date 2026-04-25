@@ -10,14 +10,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.vcaulier.macrodashboard.model.CotRecord;
 import com.vcaulier.macrodashboard.model.FinancialAsset;
+import com.vcaulier.macrodashboard.model.NewsRecord;
 import com.vcaulier.macrodashboard.service.CotService;
 import com.vcaulier.macrodashboard.service.InterestRateService;
+import com.vcaulier.macrodashboard.service.NewsCalendarService;
 
 /**
  * Main dashboard backend controller, serving 3 services :
  * - COT data of main assets of the market, who is buying or selling
  * - Interest Rates of countries for main Forex assets
- * - Economical news with their planning (currently building)
+ * - Economical news with their planning
  */
 @RestController
 @RequestMapping("/api")
@@ -28,6 +30,9 @@ public class MacroDashboardController {
 
     @Autowired
     InterestRateService interestRatesService;
+
+    @Autowired
+    NewsCalendarService newsCalendarService;
 
     /** 
      * Returns volume of traders, long or shorts, for main financial assets
@@ -45,6 +50,15 @@ public class MacroDashboardController {
     @GetMapping("/interest-rates")
     public LinkedHashMap<FinancialAsset, Double> getInterestRates() {
         return this.interestRatesService.getInterestRates();
+    }
+
+    /** 
+     * Return current news calendar, sorted by date, for main financial assets
+     * @return LinkedList<NewsRecord> List of current news, sorted by date
+     */
+    @GetMapping("/news-calendar")
+    public LinkedList<NewsRecord> getNewsCalendarRecords() {
+        return this.newsCalendarService.getNewsRecords();
     }
 
 }

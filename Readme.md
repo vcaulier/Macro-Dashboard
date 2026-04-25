@@ -15,7 +15,7 @@ docker compose up -d
 ### Currently serving 3 main backend services :
 - COT data of main assets of the market, who is buying or selling - from /api/cot-data
 - Interest Rates of countries for main Forex assets - from /api/interest-rates
-- Economical news with their planning (currently building)
+- Economical news with their planning - from /api/news-calendar
 
 ### Frontend under construction
 
@@ -40,4 +40,4 @@ This application requires external API keys for some services.
 finnhub.api.key=YOUR_API_KEY_HERE
 ```
 
-Note: The free tier is limited to 60 request every hour. The application refreshes every 5 minutes by default.
+Note: The free tier is limited to 60 request every hour. This application refreshes every 5 minutes by default.

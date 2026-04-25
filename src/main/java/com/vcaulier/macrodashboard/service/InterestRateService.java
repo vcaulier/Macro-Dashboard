@@ -66,7 +66,7 @@ public class InterestRateService {
         Element obs = (Element) element.getElementsByTagName("Obs").item(0);
         String interestRate = obs.getAttribute("OBS_VALUE");
 
-        FinancialAsset asset = FinancialAsset.fromCountryCode(refArea);
+        FinancialAsset asset = FinancialAsset.fromBisCountryCode(refArea);
 
         return new Tuple(asset, Double.parseDouble(interestRate));
     }

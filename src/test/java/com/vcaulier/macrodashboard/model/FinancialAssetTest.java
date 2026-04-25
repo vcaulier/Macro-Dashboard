@@ -42,26 +42,26 @@ public class FinancialAssetTest {
     @Test
     public void testFromValidCountryCode() {
         // Test forex assets with country codes
-        assertEquals(FinancialAsset.EUR, FinancialAsset.fromCountryCode("XM"));
-        assertEquals(FinancialAsset.GBP, FinancialAsset.fromCountryCode("GB"));
-        assertEquals(FinancialAsset.JPY, FinancialAsset.fromCountryCode("JP"));
-        assertEquals(FinancialAsset.AUD, FinancialAsset.fromCountryCode("AU"));
-        assertEquals(FinancialAsset.CAD, FinancialAsset.fromCountryCode("CA"));
-        assertEquals(FinancialAsset.USD, FinancialAsset.fromCountryCode("US"));
-        assertEquals(FinancialAsset.NZD, FinancialAsset.fromCountryCode("NZ"));
-        assertEquals(FinancialAsset.CHF, FinancialAsset.fromCountryCode("CH"));
+        assertEquals(FinancialAsset.EUR, FinancialAsset.fromBisCountryCode("XM"));
+        assertEquals(FinancialAsset.GBP, FinancialAsset.fromBisCountryCode("GB"));
+        assertEquals(FinancialAsset.JPY, FinancialAsset.fromBisCountryCode("JP"));
+        assertEquals(FinancialAsset.AUD, FinancialAsset.fromBisCountryCode("AU"));
+        assertEquals(FinancialAsset.CAD, FinancialAsset.fromBisCountryCode("CA"));
+        assertEquals(FinancialAsset.USD, FinancialAsset.fromBisCountryCode("US"));
+        assertEquals(FinancialAsset.NZD, FinancialAsset.fromBisCountryCode("NZ"));
+        assertEquals(FinancialAsset.CHF, FinancialAsset.fromBisCountryCode("CH"));
     }
 
     @Test
     public void testFromUnknownCountryCode() {
-        assertNull(FinancialAsset.fromCountryCode("XX"));
-        assertNull(FinancialAsset.fromCountryCode("FR"));
-        assertNull(FinancialAsset.fromCountryCode(""));
+        assertNull(FinancialAsset.fromBisCountryCode("XX"));
+        assertNull(FinancialAsset.fromBisCountryCode("FR"));
+        assertNull(FinancialAsset.fromBisCountryCode(""));
     }
 
     @Test
     public void testFromNullCountryCode() {
-        assertNull(FinancialAsset.fromCountryCode(null));
+        assertNull(FinancialAsset.fromBisCountryCode(null));
     }
 
     @Test
@@ -92,10 +92,10 @@ public class FinancialAssetTest {
 
     @Test
     public void testGetCountryCode() {
-        assertEquals("XM", FinancialAsset.EUR.getCountryCode());
-        assertEquals("US", FinancialAsset.USD.getCountryCode());
-        assertNull(FinancialAsset.GOLD.getCountryCode());
-        assertNull(FinancialAsset.SILVER.getCountryCode());
-        assertNull(FinancialAsset.USOIL.getCountryCode());
+        assertEquals("XM", FinancialAsset.EUR.getBisCountryCode());
+        assertEquals("US", FinancialAsset.USD.getBisCountryCode());
+        assertNull(FinancialAsset.GOLD.getBisCountryCode());
+        assertNull(FinancialAsset.SILVER.getBisCountryCode());
+        assertNull(FinancialAsset.USOIL.getBisCountryCode());
     }
 }

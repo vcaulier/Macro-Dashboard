@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * Backend of MacroEconomics Dashboard application, serving 3 openned services :
  * - COT data of main assets of the market, who is buying or selling
  * - Interest Rates of countries for main Forex assets
- * - Economical news with their planning (currently building)
+ * - Economical news with their planning
  */
 @EnableScheduling
 @SpringBootApplication
