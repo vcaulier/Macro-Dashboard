@@ -80,7 +80,6 @@ public class InterestRateServiceTest {
         @SuppressWarnings("unchecked")
         Tuple<FinancialAsset, Double> result = (Tuple<FinancialAsset, Double>) parseRate.invoke(interestRateService, element);
 
-        // Vérifications
         assertNotNull(result);
         assertEquals(FinancialAsset.USD, result._1());
         assertEquals(3.625, result._2());

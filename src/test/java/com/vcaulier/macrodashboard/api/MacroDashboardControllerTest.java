@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,7 +38,6 @@ public class MacroDashboardControllerTest {
 
     @Test
     public void testGetCotData() {
-        // Arrange
         LinkedList<CotRecord> mockRecords = new LinkedList<>();
         mockRecords.add(new CotRecord(
             LocalDate.of(2026, 4, 15),
@@ -62,14 +60,11 @@ public class MacroDashboardControllerTest {
 
         when(cotService.createCotRecords()).thenReturn(mockRecords);
 
-        // Act
         LinkedList<CotRecord> result = controller.getCotData();
 
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
 
-        // Verify first record
         CotRecord firstRecord = result.get(0);
         assertEquals(LocalDate.of(2026, 4, 15), firstRecord.getDate());
         assertEquals(FinancialAsset.EUR, firstRecord.getAsset());
@@ -85,7 +80,6 @@ public class MacroDashboardControllerTest {
         assertEquals(20000L, firstRecord.getRetailNet());
         assertEquals(480000L, firstRecord.getOpenInterest());
 
-        // Verify second record
         CotRecord secondRecord = result.get(1);
         assertEquals(LocalDate.of(2026, 4, 15), secondRecord.getDate());
         assertEquals(FinancialAsset.GOLD, secondRecord.getAsset());
@@ -101,19 +95,15 @@ public class MacroDashboardControllerTest {
         assertEquals(5000L, secondRecord.getRetailNet());
         assertEquals(230000L, secondRecord.getOpenInterest());
 
-        // Verify service was called
         verify(cotService, times(1)).createCotRecords();
     }
 
     @Test
     public void testGetCotDataFromEmptyList() {
-        // Arrange
         when(cotService.createCotRecords()).thenReturn(new LinkedList<>());
 
-        // Act
         LinkedList<CotRecord> result = controller.getCotData();
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(cotService, times(1)).createCotRecords();
@@ -121,7 +111,6 @@ public class MacroDashboardControllerTest {
 
     @Test
     public void testGetInterestRates() {
-        // Arrange
         LinkedHashMap<FinancialAsset, Double> mockRates = new LinkedHashMap<>();
         mockRates.put(FinancialAsset.USD, 5.5);
         mockRates.put(FinancialAsset.GBP, 3.0);
@@ -130,10 +119,8 @@ public class MacroDashboardControllerTest {
 
         when(interestRateService.getInterestRates()).thenReturn(mockRates);
 
-        // Act
         LinkedHashMap<FinancialAsset, Double> result = controller.getInterestRates();
 
-        // Assert
         assertNotNull(result);
         assertEquals(4, result.size());
         assertEquals(5.5, result.get(FinancialAsset.USD));
@@ -146,13 +133,10 @@ public class MacroDashboardControllerTest {
 
     @Test
     public void testGetInterestRatesFromEmptyMap() {
-        // Arrange
         when(interestRateService.getInterestRates()).thenReturn(new LinkedHashMap<>());
 
-        // Act
         LinkedHashMap<FinancialAsset, Double> result = controller.getInterestRates();
 
-        // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(interestRateService, times(1)).getInterestRates();
@@ -160,7 +144,6 @@ public class MacroDashboardControllerTest {
 
     @Test
     public void testGetInterestRatesPreservesOrder() {
-        // Arrange - LinkedHashMap preserves insertion order
         LinkedHashMap<FinancialAsset, Double> mockRates = new LinkedHashMap<>();
         mockRates.put(FinancialAsset.USD, 5.5);
         mockRates.put(FinancialAsset.GBP, 5.0);
@@ -169,10 +152,8 @@ public class MacroDashboardControllerTest {
 
         when(interestRateService.getInterestRates()).thenReturn(mockRates);
 
-        // Act
         LinkedHashMap<FinancialAsset, Double> result = controller.getInterestRates();
 
-        // Assert - verify order is preserved
         var keys = result.keySet().stream().toList();
         assertEquals(FinancialAsset.USD, keys.get(0));
         assertEquals(FinancialAsset.GBP, keys.get(1));

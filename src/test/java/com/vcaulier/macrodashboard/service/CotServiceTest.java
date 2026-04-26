@@ -34,7 +34,6 @@ public class CotServiceTest {
         cotService = new CotService();
         objectMapper = new ObjectMapper();
 
-        // Get private methods via reflection for unit testing
         parseDateMethod = CotService.class.getDeclaredMethod("parseDate", JsonNode.class, String.class);
         parseDateMethod.setAccessible(true);
 
@@ -88,7 +87,7 @@ public class CotServiceTest {
     }
 
     @Test
-    public void testParseDateFromInvalidFormat() throws Exception {
+    public void testParseDateFromInvalidFormat() throws InvocationTargetException {
         String json = """
             {
                 "report_date_as_yyyy_mm_dd": "invalid_date"

@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.yaml.snakeyaml.util.Tuple;
 
 import com.vcaulier.macrodashboard.model.FinancialAsset;
 import com.vcaulier.macrodashboard.model.NewsRecord;
@@ -64,7 +63,7 @@ public class NewsCalendarService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             dateTime = LocalDateTime.parse(node.get("time").asString(), formatter);
         } catch(DateTimeParseException e) {
-            System.err.println("Error: DateTime format error while parsing record :\n" + node.asString());
+            System.err.println("Error: DateTime format error while parsing record :\n" + node.toPrettyString());
             return null;
         }
 
