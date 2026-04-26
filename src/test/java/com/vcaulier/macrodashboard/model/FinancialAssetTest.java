@@ -2,6 +2,7 @@ package com.vcaulier.macrodashboard.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -11,7 +12,6 @@ public class FinancialAssetTest {
 
     @Test
     public void testFromMarketNameWithValidCftcCodes() {
-        // Test all Forex assets
         assertEquals(FinancialAsset.EUR, FinancialAsset.fromMarketName("EURO FX"));
         assertEquals(FinancialAsset.GBP, FinancialAsset.fromMarketName("BRITISH POUND"));
         assertEquals(FinancialAsset.JPY, FinancialAsset.fromMarketName("JAPANESE YEN"));
@@ -21,7 +21,6 @@ public class FinancialAssetTest {
         assertEquals(FinancialAsset.NZD, FinancialAsset.fromMarketName("NZ DOLLAR"));
         assertEquals(FinancialAsset.CHF, FinancialAsset.fromMarketName("SWISS FRANC"));
 
-        // Test commodity assets
         assertEquals(FinancialAsset.GOLD, FinancialAsset.fromMarketName("GOLD"));
         assertEquals(FinancialAsset.SILVER, FinancialAsset.fromMarketName("SILVER"));
         assertEquals(FinancialAsset.USOIL, FinancialAsset.fromMarketName("WTI-PHYSICAL"));
@@ -40,7 +39,7 @@ public class FinancialAssetTest {
     }
 
     @Test
-    public void testFromValidCountryCode() {
+    public void testFromValidBisCountryCode() {
         // Test forex assets with country codes
         assertEquals(FinancialAsset.EUR, FinancialAsset.fromBisCountryCode("XM"));
         assertEquals(FinancialAsset.GBP, FinancialAsset.fromBisCountryCode("GB"));
@@ -53,15 +52,41 @@ public class FinancialAssetTest {
     }
 
     @Test
-    public void testFromUnknownCountryCode() {
+    public void testFromUnknownBisCountryCode() {
         assertNull(FinancialAsset.fromBisCountryCode("XX"));
         assertNull(FinancialAsset.fromBisCountryCode("FR"));
         assertNull(FinancialAsset.fromBisCountryCode(""));
     }
 
     @Test
-    public void testFromNullCountryCode() {
+    public void testFromNullBisCountryCode() {
         assertNull(FinancialAsset.fromBisCountryCode(null));
+    }
+
+    @Test
+    public void testFromValidNewsCountryCode() {
+        assertEquals(FinancialAsset.EUR, FinancialAsset.fromNewsCountryCode("FR"));
+        assertEquals(FinancialAsset.EUR, FinancialAsset.fromNewsCountryCode("IT"));
+        assertEquals(FinancialAsset.EUR, FinancialAsset.fromNewsCountryCode("NL"));
+        assertEquals(FinancialAsset.EUR, FinancialAsset.fromNewsCountryCode("ES"));
+        assertEquals(FinancialAsset.GBP, FinancialAsset.fromNewsCountryCode("GB"));
+        assertEquals(FinancialAsset.JPY, FinancialAsset.fromNewsCountryCode("JP"));
+        assertEquals(FinancialAsset.AUD, FinancialAsset.fromNewsCountryCode("AU"));
+        assertEquals(FinancialAsset.CAD, FinancialAsset.fromNewsCountryCode("CA"));
+        assertEquals(FinancialAsset.USD, FinancialAsset.fromNewsCountryCode("US"));
+        assertEquals(FinancialAsset.NZD, FinancialAsset.fromNewsCountryCode("NZ"));
+        assertEquals(FinancialAsset.CHF, FinancialAsset.fromNewsCountryCode("CH"));
+    }
+
+    @Test
+    public void testFromUnknownNewsCountryCode() {
+        assertNull(FinancialAsset.fromNewsCountryCode("ZZ"));
+        assertNull(FinancialAsset.fromNewsCountryCode(""));
+    }
+
+    @Test
+    public void testFromNullNewsCountryCode() {
+        assertNull(FinancialAsset.fromNewsCountryCode(null));
     }
 
     @Test
@@ -91,11 +116,21 @@ public class FinancialAssetTest {
     }
 
     @Test
-    public void testGetCountryCode() {
+    public void testGetBisCountryCode() {
         assertEquals("XM", FinancialAsset.EUR.getBisCountryCode());
         assertEquals("US", FinancialAsset.USD.getBisCountryCode());
         assertNull(FinancialAsset.GOLD.getBisCountryCode());
         assertNull(FinancialAsset.SILVER.getBisCountryCode());
         assertNull(FinancialAsset.USOIL.getBisCountryCode());
+    }
+
+    @Test
+    public void testGetNewsCountryCodes() {
+        assertTrue(FinancialAsset.EUR.getNewsCountryCodes().contains("FR"));
+        assertTrue(FinancialAsset.EUR.getNewsCountryCodes().contains("IT"));
+        assertTrue(FinancialAsset.USD.getNewsCountryCodes().contains("US"));
+        assertNull(FinancialAsset.GOLD.getNewsCountryCodes());
+        assertNull(FinancialAsset.SILVER.getNewsCountryCodes());
+        assertNull(FinancialAsset.USOIL.getNewsCountryCodes());
     }
 }

@@ -74,8 +74,8 @@ public enum FinancialAsset {
      */
     public static FinancialAsset fromNewsCountryCode(String newsCountryCode) {
         for (FinancialAsset asset : values()) {
-            if (newsCountryCode != null && asset.getNewsCountryCode() != null 
-                    && asset.getNewsCountryCode().contains(newsCountryCode)) {
+            if (newsCountryCode != null && asset.getNewsCountryCodes() != null 
+                    && asset.getNewsCountryCodes().contains(newsCountryCode)) {
                 return asset;
             }
         }
@@ -120,7 +120,7 @@ public enum FinancialAsset {
     /**
      * @return Linked news country codes of this asset
      */
-    public Set<String> getNewsCountryCode() {
+    public Set<String> getNewsCountryCodes() {
         return this.newsCountryCodes;
     }
 }

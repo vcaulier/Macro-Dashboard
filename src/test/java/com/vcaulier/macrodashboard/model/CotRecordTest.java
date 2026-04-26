@@ -14,10 +14,8 @@ public class CotRecordTest {
 
     @Test
     public void testNoArgsConstructor() {
-        // Act
         CotRecord record = new CotRecord();
 
-        // Assert - all fields should be initialized to defaults
         assertNull(record.getDate());
         assertNull(record.getAsset());
         assertNull(record.getCategory());
@@ -35,10 +33,8 @@ public class CotRecordTest {
 
     @Test
     public void testAllArgsConstructor() {
-        // Arrange
         LocalDate date = LocalDate.of(2026, 4, 15);
 
-        // Act
         CotRecord record = new CotRecord(
             date,
             FinancialAsset.EUR,
@@ -55,7 +51,6 @@ public class CotRecordTest {
             480000L   // openInterest
         );
 
-        // Assert
         assertEquals(date, record.getDate());
         assertEquals(FinancialAsset.EUR, record.getAsset());
         assertEquals("forex", record.getCategory());
@@ -73,11 +68,9 @@ public class CotRecordTest {
 
     @Test
     public void testSettersAndGetters() {
-        // Arrange
         CotRecord record = new CotRecord();
         LocalDate date = LocalDate.of(2026, 4, 20);
 
-        // Act - use setters
         record.setDate(date);
         record.setAsset(FinancialAsset.GOLD);
         record.setCategory("commodity");
@@ -92,7 +85,6 @@ public class CotRecordTest {
         record.setRetailNet(10000L);
         record.setOpenInterest(580000L);
 
-        // Assert - verify getters
         assertEquals(date, record.getDate());
         assertEquals(FinancialAsset.GOLD, record.getAsset());
         assertEquals("commodity", record.getCategory());
