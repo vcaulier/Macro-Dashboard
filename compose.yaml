@@ -7,6 +7,7 @@ services:
         - "8081:8081"
       environment:
         - SPRING_PROFILES_ACTIVE=prod
+        - FINNHUB_API_KEY=${FINNHUB_API_KEY:-}
       restart: unless-stopped
 
   frontend:

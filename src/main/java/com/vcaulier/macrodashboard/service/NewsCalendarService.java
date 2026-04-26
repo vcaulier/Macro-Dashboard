@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,8 @@ import tools.jackson.databind.node.ArrayNode;
 
 @Service
 public class NewsCalendarService {
+
+    private static final Logger log = LoggerFactory.getLogger(NewsCalendarService.class);
 
     /**
      * Our JSON datasource, serving actual calendar news records
@@ -51,9 +56,12 @@ public class NewsCalendarService {
      * PostConstruct to init interest rates data, as it won't move until next CRON task 
      */
     @PostConstruct
-    private void initNewsRecords() throws ParserConfigurationException {
-        this.updateNewsRecords();
-
+    private void initNewsRecords() {
+        try {
+            this.updateNewsRecords();
+        } catch(Exception e) {
+            log.error("Could not initialize news records on startup: {}. Will retry on next request.");
+        }
     }
 
     private NewsRecord parseNewsRecord(JsonNode node) {        
@@ -63,7 +71,7 @@ public class NewsCalendarService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             dateTime = LocalDateTime.parse(node.get("time").asString(), formatter);
         } catch(DateTimeParseException e) {
-            System.err.println("Error: DateTime format error while parsing record :\n" + node.toPrettyString());
+            log.error("Error: DateTime format error while parsing record :\n" + node.toPrettyString());
             return null;
         }
 

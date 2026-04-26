@@ -34,10 +34,17 @@ This application requires external API keys for some services.
 
 1. Create a free account on [Finnhub.io](https://www.finnhub.io)
 2. Generate your API key from your profile
-3. Add it to `src/main/resources/application.properties` :
+3. Copy the example environment file to .env :
 
-```properties
-finnhub.api.key=YOUR_API_KEY_HERE
+```bash
+   cp .env.example .env
+```
+
+4. Edit `.env` and set your key
+5. Launch the application:
+
+```bash
+   docker compose up -d
 ```
 
 Note: The free tier is limited to 60 request every hour. This application refreshes every 5 minutes by default.

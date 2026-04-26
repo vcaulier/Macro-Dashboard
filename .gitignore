@@ -34,3 +34,6 @@ build/
 
 ### Node ###
 package-lock.json
+
+### Custom properties ###
+.env

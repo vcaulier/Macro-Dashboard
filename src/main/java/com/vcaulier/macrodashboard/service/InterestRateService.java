@@ -10,6 +10,9 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,8 @@ import jakarta.annotation.PostConstruct;
  */
 @Service
 public class InterestRateService {
+
+    private static final Logger log = LoggerFactory.getLogger(InterestRateService.class);
 
     /**
      * Our XML datasource, serving actual central banks interest rates, for a lot of countries
@@ -55,9 +60,12 @@ public class InterestRateService {
      * PostConstruct to init interest rates data, as it won't move until next CRON task 
      */
     @PostConstruct
-    private void initInterestRates() throws ParserConfigurationException {
-        this.updateInterestRates();
-
+    private void initInterestRates() {
+        try {
+            this.updateInterestRates();
+        } catch(Exception e) {
+            log.error("Could not initialize interest rates on startup: {}. Will retry on next request.");
+        }
     }
 
     private Tuple<FinancialAsset, Double> parseRate(Element element) {
