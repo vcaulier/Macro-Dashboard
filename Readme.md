@@ -1,9 +1,9 @@
 # Macro Dashboard
 
 ## Personal macro trading dashboard, with :
-- COT positioning
-- Economic calendar
-- Forex sentiment
+- COT positioning, who is buying or selling on the market, for main assets
+- Economic calendar, last news with their previsions, for current week
+- Central banks interest rates, of countries for main Forex assets
 
 ### This is a Docker project, launch with :
 ```
