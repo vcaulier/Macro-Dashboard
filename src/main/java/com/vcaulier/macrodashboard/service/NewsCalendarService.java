@@ -11,7 +11,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -99,6 +98,11 @@ public class NewsCalendarService {
 
         LocalDate now = LocalDate.now();
         LocalDate inOneWeek = now.plusDays(7);
+
+        if(FINNHUB_API_KEY == null || FINNHUB_API_KEY.equals("-") || FINNHUB_API_KEY.isEmpty()) {
+            this.newsCalendarRecords = new LinkedList<>();
+            return;
+        }
 
         ArrayNode currentWeek = restTemplate.getForObject(NEWS_CALENDAR_BASE_URL
              + "?from=" + now.toString() + "&to=" + inOneWeek.toString() + "&token=" + FINNHUB_API_KEY, 

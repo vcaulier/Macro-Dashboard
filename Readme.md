@@ -30,6 +30,10 @@ docker compose up -d
 
 This application requires external API keys for some services.
 
+Please note that this service can still stay down if you prefer,
+just don't set the .env variable if you want to use
+another news calendar service.
+
 **Finnhub Calendar API** (required for economic calendar)
 
 1. Create a free account on [Finnhub.io](https://www.finnhub.io)
@@ -47,4 +51,6 @@ This application requires external API keys for some services.
    docker compose up -d
 ```
 
-Note: The free tier is limited to 60 request every hour. This application refreshes every 5 minutes by default.
+Notes:
+- The free tier is limited to 60 request every minute. This application refreshes every 5 minutes by default.
+- And if you prefer to use another economic calendar service, simply don't set this env variable, and the application won't serve calendar news.
