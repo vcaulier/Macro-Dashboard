@@ -1,11 +1,11 @@
-import { Component, AfterViewInit, inject, signal, computed } from '@angular/core';
+import { Component, AfterViewInit, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration } from 'chart.js';
+import { ChartConfiguration, ChartData, Chart, registerables } from 'chart.js';
 import { CotService } from '../../core/services/cot.service';
 import { Asset, ASSETS } from '../../models/asset.model';
 import { CotNetData } from '../../models/cot.model';
-import { Chart, registerables } from 'chart.js';
+
 Chart.register(...registerables);
 
 @Component({
@@ -21,42 +21,23 @@ export class CotChartComponent implements AfterViewInit {
 
   assets = ASSETS;
   selectedAsset = signal<Asset>('EUR');
-  assetData = signal<CotNetData[]>([]);
 
-  chartData = computed(() => ({
-    labels: this.assetData().map(d => d.date),
+  chartData: ChartConfiguration<'line'>['data'] = {
+    labels: [],
     datasets: [
-      {
-        label: 'Hedgers (Commercial)',
-        data: this.assetData().map(d => d.hedgersNet),
-        borderColor: '#e8a04d',
-        fill: 'origin',
-        backgroundColor: 'rgba(139,69,19,0.15)',
-        pointRadius: 0,
-        tension: 0.3
-      },
-      {
-        label: 'Institutions (Large Spec.)',
-        data: this.assetData().map(d => d.institutionnalNet),
-        borderColor: '#4f8ef7',
-        fill: false,
-        pointRadius: 0,
-        tension: 0.3
-      },
-      {
-        label: 'Retail (Non-Reportable)',
-        data: this.assetData().map(d => d.retailNet),
-        borderColor: '#a47fd4',
-        fill: false,
-        pointRadius: 0,
-        tension: 0.3
-      }
+      { label: 'Hedgers (Commercial)', data: [], borderColor: '#e8a04d',
+        backgroundColor: 'rgba(139,69,19,0.15)', fill: 'origin', pointRadius: 0, tension: 0.3 },
+      { label: 'Institutions (Large Spec.)', data: [], borderColor: '#4f8ef7',
+        fill: false, pointRadius: 0, tension: 0.3 },
+      { label: 'Retail (Non-Reportable)', data: [], borderColor: '#a47fd4',
+        fill: false, pointRadius: 0, tension: 0.3 }
     ]
-  }));
+  };
 
   chartOptions: ChartConfiguration['options'] = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: { duration: 0 },
     plugins: {
       legend: {
         position: 'bottom',
@@ -82,17 +63,26 @@ export class CotChartComponent implements AfterViewInit {
     }
   };
 
+  @ViewChild(BaseChartDirective) chartDirective?: BaseChartDirective;
+
+  private updateChartData(data: CotNetData[]) {
+    this.chartData.labels = data.map(d => d.date);
+    this.chartData.datasets[0].data = data.map(d => d.hedgersNet);
+    this.chartData.datasets[1].data = data.map(d => d.institutionnalNet);
+    this.chartData.datasets[2].data = data.map(d => d.retailNet);
+    this.chartDirective?.update('none');
+  }
+
   selectAsset(asset: Asset) {
     this.selectedAsset.set(asset);
     const data = this.cotService.getByAsset(asset);
-    if (data.length > 0) {
-      this.assetData.set(data);
-    }
+    if (data.length > 0) this.updateChartData(data);
   }
 
   ngAfterViewInit() {
     this.cotService.loadAll().subscribe(() => {
-      this.assetData.set(this.cotService.getByAsset(this.selectedAsset()));
+      const data = this.cotService.getByAsset(this.selectedAsset());
+      this.updateChartData(data);
     });
   }
 }
