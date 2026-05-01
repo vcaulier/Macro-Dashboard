@@ -1,1 +1,25 @@
-<p>cot-chart works!</p>
+<div class="cot-panel">
+  <div class="panel-header">
+    <div>
+      <h2>COT Positioning</h2>
+      <p class="subtitle">Institutionnals vs Retails net positions (52 weeks)</p>
+    </div>
+  </div>
+
+  <div class="asset-tabs">
+    <button
+      *ngFor="let a of assets"
+      [class.active]="selectedAsset() === a"
+      (click)="selectAsset(a)">
+      {{ a }}
+    </button>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas baseChart
+      [data]="chartData()"
+      [type]="'line'"
+      [options]="chartOptions">
+    </canvas>
+  </div>
+</div>

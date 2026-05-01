@@ -1,7 +1,7 @@
 import { Asset } from "./asset.model";
 
 export interface CotNetData {
-  date: string;
+  date: Date;
   asset: Asset;
   hedgersLong: number;
   hedgersShort: number;
