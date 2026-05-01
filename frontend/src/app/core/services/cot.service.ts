@@ -19,7 +19,7 @@ export class CotService implements OnDestroy {
   private readonly REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 
   loadAll(): Observable<CotNetData[]> {
-    this.fetchAndCache();
+    this.fetchAndCacheWithRetry();
     this.startCron();
     return this.allRecords$.asObservable();
   }
@@ -28,21 +28,28 @@ export class CotService implements OnDestroy {
     return this.cache.get(asset) ?? [];
   }
 
-  private fetchAndCache() {
-    this.http.get<CotNetData[]>(`${this.base}`).subscribe(data => {
-      if (!Array.isArray(data))
-        return;
-      ASSETS.forEach(asset => {
-        this.cache.set(asset, data.filter(d => d.asset === asset));
-      });
-      this.allRecords$.next(data);
-    });
+  private fetchAndCacheWithRetry(attempt = 1) {
+    this.http.get<CotNetData[]>(`${this.base}`).subscribe({
+      next: (data) => {
+        if (!Array.isArray(data))
+          return;
+        ASSETS.forEach(asset => {
+          this.cache.set(asset, data.filter(d => d.asset === asset));
+        });
+        this.allRecords$.next(data);
+      },
+      error: () => {
+        if (attempt < 5) {
+          // Réessaie dans 15s si échec
+          setTimeout(() => this.fetchAndCacheWithRetry(attempt + 1), 15000);
+        }
+      }});
   }
 
   private startCron() {
     if (this.refreshInterval) return; // déjà démarré
     this.refreshInterval = setInterval(() => {
-      this.fetchAndCache();
+      this.fetchAndCacheWithRetry();
     }, this.REFRESH_INTERVAL_MS);
   }
 

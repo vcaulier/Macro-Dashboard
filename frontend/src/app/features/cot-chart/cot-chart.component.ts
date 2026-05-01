@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, inject, signal, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, inject, signal, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, Chart, registerables } from 'chart.js';
@@ -12,12 +12,14 @@ Chart.register(...registerables);
   selector: 'app-cot-chart',
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cot-chart.component.html',
   styleUrl: './cot-chart.component.scss'
 })
 export class CotChartComponent implements AfterViewInit {
 
   private cotService = inject(CotService);
+  private cdr = inject(ChangeDetectorRef);
 
   assets = ASSETS;
   selectedAsset = signal<Asset>('EUR');
@@ -66,10 +68,15 @@ export class CotChartComponent implements AfterViewInit {
   @ViewChild(BaseChartDirective) chartDirective?: BaseChartDirective;
 
   private updateChartData(data: CotNetData[]) {
-    this.chartData.labels = data.map(d => d.date);
-    this.chartData.datasets[0].data = data.map(d => d.hedgersNet);
-    this.chartData.datasets[1].data = data.map(d => d.institutionnalNet);
-    this.chartData.datasets[2].data = data.map(d => d.retailNet);
+    this.chartData = {
+      labels: data.map(d => d.date),
+      datasets: [
+        { ...this.chartData.datasets[0], data: data.map(d => d.hedgersNet) },
+        { ...this.chartData.datasets[1], data: data.map(d => d.institutionnalNet) },
+        { ...this.chartData.datasets[2], data: data.map(d => d.retailNet) }
+      ]
+    };
+    this.cdr.markForCheck();
     this.chartDirective?.update('none');
   }
 
