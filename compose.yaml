@@ -8,6 +8,8 @@ services:
       environment:
         - SPRING_PROFILES_ACTIVE=prod
         - FINNHUB_API_KEY=${FINNHUB_API_KEY:-}
+        - CFTC_API_KEY=${CFTC_API_KEY:-}
+        - CFTC_SECRET=${CFTC_SECRET:-}
       restart: unless-stopped
 
   frontend:
