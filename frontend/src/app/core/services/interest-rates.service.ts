@@ -9,7 +9,7 @@ import { InterestRate } from '../../models/interest-rate.model';
 })
 export class InterestRatesService {
   private http = inject(HttpClient);
-  private base = 'http://localhost:8080/api/interest-rates';
+  private base = 'http://127.0.0.1:8081/api/interest-rates';
 
   getRates(): Observable<InterestRate[]> {
     return this.http.get<InterestRate[]>(`${this.base}`).pipe(

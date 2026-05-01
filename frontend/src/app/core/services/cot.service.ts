@@ -10,7 +10,7 @@ import { Asset, ASSETS } from '../../models/asset.model';
 export class CotService implements OnDestroy {
 
   private http = inject(HttpClient);
-  private base = 'http://localhost:8081/api/cot-data';
+  private base = 'http://127.0.0.1:8081/api/cot-data';
   
   private cache = new Map<Asset, CotNetData[]>();
   private allRecords$ = new ReplaySubject<CotNetData[]>(1);
@@ -30,6 +30,8 @@ export class CotService implements OnDestroy {
 
   private fetchAndCache() {
     this.http.get<CotNetData[]>(`${this.base}`).subscribe(data => {
+      if (!Array.isArray(data))
+        return;
       ASSETS.forEach(asset => {
         this.cache.set(asset, data.filter(d => d.asset === asset));
       });

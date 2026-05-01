@@ -1,10 +1,12 @@
-import { Component, OnInit, AfterViewInit, inject, signal, computed } from '@angular/core';
+import { Component, AfterViewInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { CotService } from '../../core/services/cot.service';
 import { Asset, ASSETS } from '../../models/asset.model';
 import { CotNetData } from '../../models/cot.model';
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-cot-chart',
@@ -63,11 +65,13 @@ export class CotChartComponent implements AfterViewInit {
     },
     scales: {
       x: {
+        type: 'category',
         grid: { color: 'rgba(255,255,255,0.05)' },
         ticks: { color: '#8892a4', maxTicksLimit: 8, maxRotation: 0 },
         border: { dash: [4, 4] }
       },
       y: {
+        type: 'linear',
         grid: { color: 'rgba(255,255,255,0.05)' },
         ticks: {
           color: '#8892a4',
@@ -80,8 +84,10 @@ export class CotChartComponent implements AfterViewInit {
 
   selectAsset(asset: Asset) {
     this.selectedAsset.set(asset);
-    // Lecture synchrone depuis le cache du service
-    this.assetData.set(this.cotService.getByAsset(asset));
+    const data = this.cotService.getByAsset(asset);
+    if (data.length > 0) {
+      this.assetData.set(data);
+    }
   }
 
   ngAfterViewInit() {
