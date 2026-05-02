@@ -12,8 +12,12 @@ export class InterestRatesService {
   private base = 'http://127.0.0.1:8081/api/interest-rates';
 
   getRates(): Observable<InterestRate[]> {
-    return this.http.get<InterestRate[]>(`${this.base}`).pipe(
-      map(rates => [...rates].sort((a, b) => b.rate - a.rate)) // tri décroissant côté Angular
+    return this.http.get<Record<string, number>>(`${this.base}`).pipe(
+      map(response =>
+        Object.entries(response)
+          .map(([currency, rate]) => ({ currency, rate }))
+          .sort((a, b) => b.rate - a.rate)
+      )
     );
   }
 }

@@ -1,1 +1,11 @@
-<p>interest-rates works!</p>
+<div class="rates-panel">
+  <h2>Interest Rates</h2>
+  <p class="subtitle">Central bank rates — sorted high to low</p>
+
+  <div class="rate-list">
+    <div class="rate-card" *ngFor="let r of rates()">
+      <span class="currency">{{ r.currency }}</span>
+      <span class="rate-value">{{ r.rate | number:'1.2-2' }}%</span>
+    </div>
+  </div>
+</div>
