@@ -6,7 +6,47 @@ import { CotService } from '../../core/services/cot.service';
 import { Asset, ASSETS } from '../../models/asset.model';
 import { CotNetData } from '../../models/cot.model';
 
-Chart.register(...registerables);
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDraw(chart: any) {
+    if (!chart._active?.length) return;
+    const ctx = chart.ctx;
+    const x = chart._active[0].element.x;
+    const top = chart.chartArea.top;
+    const bottom = chart.chartArea.bottom;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+const zeroLinePlugin = {
+  id: 'zeroLine',
+  afterDraw(chart: any) {
+    const ctx = chart.ctx;
+    const yScale = chart.scales['y'];
+    if (!yScale) return;
+    const y = yScale.getPixelForValue(0);
+    if (y < chart.chartArea.top || y > chart.chartArea.bottom) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(chart.chartArea.left, y);
+    ctx.lineTo(chart.chartArea.right, y);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.setLineDash([6, 4]);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
+
+Chart.register(...registerables, crosshairPlugin, zeroLinePlugin);
 
 @Component({
   selector: 'app-cot-chart',
@@ -40,11 +80,33 @@ export class CotChartComponent implements AfterViewInit {
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 0 },
+
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
     plugins: {
       legend: {
         position: 'bottom',
         labels: { color: '#8892a4', usePointStyle: true }
-      }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(25,28,36,0.95)' as string,
+        titleColor: '#e2e8f0' as string,
+        bodyColor: '#8892a4' as string,
+        borderColor: 'rgba(255,255,255,0.08)' as string,
+        borderWidth: 1,
+        padding: 10,
+        callbacks: {
+          label: (ctx: any) => {
+            const y: number = ctx.parsed?.y ?? 0;
+            const formatted = Math.abs(y) >= 1000
+              ? (y / 1000).toFixed(1) + 'k'
+              : y.toString();
+            return ` ${ctx.dataset.label}: ${formatted}`;
+          }
+        }
+      } as any
     },
     scales: {
       x: {
@@ -67,13 +129,29 @@ export class CotChartComponent implements AfterViewInit {
 
   @ViewChild(BaseChartDirective) chartDirective?: BaseChartDirective;
 
+  private buildDataset(label: string, data: number[], color: string, fill: any) {
+    const radii = data.map((_, i) => i === data.length - 1 ? 4 : 0);
+    const pointColors = data.map((_, i) => i === data.length - 1 ? color : 'transparent');
+    return {
+      label,
+      data,
+      borderColor: color,
+      backgroundColor: fill === 'origin' ? color.replace(')', ',0.15)').replace('rgb', 'rgba') : undefined,
+      fill,
+      borderDash: label.includes('Hedgers') ? [5, 4] : undefined,
+      pointRadius: radii,
+      pointBackgroundColor: pointColors,
+      tension: 0.3
+    };
+  }
+
   private updateChartData(data: CotNetData[]) {
     this.chartData = {
       labels: data.map(d => d.date),
       datasets: [
-        { ...this.chartData.datasets[0], data: data.map(d => d.hedgersNet) },
-        { ...this.chartData.datasets[1], data: data.map(d => d.institutionnalNet) },
-        { ...this.chartData.datasets[2], data: data.map(d => d.retailNet) }
+        this.buildDataset('Hedgers (Commercial)', data.map(d => d.hedgersNet), '#e8a04d', false),
+        this.buildDataset('Institutions (Large Spec.)', data.map(d => d.institutionnalNet), '#4f8ef7', false),
+        this.buildDataset('Retail (Non-Reportable)', data.map(d => d.retailNet), '#a47fd4', false)
       ]
     };
     this.cdr.markForCheck();
