@@ -1,0 +1,25 @@
+.dashboard {
+  background: #111318;
+  min-height: 100vh;
+  color: #e2e8f0;
+}
+
+.dash-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  .logo { font-size: 18px; font-weight: 600; }
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  height: calc(100vh - 70px);
+  overflow: hidden;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
