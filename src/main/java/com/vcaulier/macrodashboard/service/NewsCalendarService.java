@@ -11,6 +11,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -59,7 +60,7 @@ public class NewsCalendarService {
         try {
             this.updateNewsRecords();
         } catch(Exception e) {
-            log.error("Could not initialize news records on startup: {}. Will retry on next request.");
+            log.error("Could not initialize news records on startup: {}. Will retry on next request.", e);
         }
     }
 
@@ -115,11 +116,51 @@ public class NewsCalendarService {
             news.add(record);
         }
 
+        news.stream()
+            .filter(record -> record.getEventName().contains("Interest Rate Decision")
+                 && record.getActualValue() != null && record.getAsset() != null)
+            .forEach(record -> InterestRateService.addNewInterestRate(record));
+            
+
         this.newsCalendarRecords = news.stream()
             .filter(record -> record != null && record.getDateTime().isAfter(now.atStartOfDay()) && record.getAsset() != null)
             .filter(record -> record.getImpact() != null 
                 && (record.getImpact().equals("medium") || record.getImpact().equals("high")))
             .sorted((a,b) -> a.getDateTime().compareTo(b.getDateTime()))
             .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    public void checkPastNewsRecords() throws ParserConfigurationException {
+
+        LocalDate now = LocalDate.now();
+
+        if(FINNHUB_API_KEY == null || FINNHUB_API_KEY.equals("-") || FINNHUB_API_KEY.isEmpty()) {
+            this.newsCalendarRecords = new LinkedList<>();
+            return;
+        }
+
+        LinkedList<NewsRecord> news = new LinkedList<>();
+
+        for (int i = 13; i > 0; i--) {
+
+            LocalDate pastDate = now.minusMonths(i);
+            LocalDate recentDate = now.minusMonths(i-1);
+            ArrayNode pastYearRecords = restTemplate.getForObject(NEWS_CALENDAR_BASE_URL
+                + "?from=" + pastDate.toString() + "&to=" + recentDate.toString() + "&token=" + FINNHUB_API_KEY, 
+                JsonNode.class).get("economicCalendar").asArray();
+
+            for (int j = 0; j < pastYearRecords.size(); j++) {
+                JsonNode node = (JsonNode) pastYearRecords.get(j);
+                NewsRecord record = this.parseNewsRecord(node);
+                news.add(record);
+            }
+            
+        }
+
+        news.stream()
+            .filter(record -> record.getEventName().contains("Interest Rate Decision")
+                 && record.getActualValue() != null && record.getAsset() != null)
+            .sorted((a, b) -> a.getDateTime().compareTo(b.getDateTime()))
+            .forEach(record -> InterestRateService.addNewInterestRate(record));
     }
 }

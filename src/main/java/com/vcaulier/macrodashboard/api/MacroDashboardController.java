@@ -2,6 +2,7 @@ package com.vcaulier.macrodashboard.api;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.vcaulier.macrodashboard.model.CotRecord;
 import com.vcaulier.macrodashboard.model.FinancialAsset;
+import com.vcaulier.macrodashboard.model.InterestRate;
 import com.vcaulier.macrodashboard.model.NewsRecord;
 import com.vcaulier.macrodashboard.service.CotService;
 import com.vcaulier.macrodashboard.service.InterestRateService;
@@ -48,8 +50,10 @@ public class MacroDashboardController {
      * @return LinkedHashMap<FinancialAsset, Double> Hashmap of interest rates linked to their financial assets
      */
     @GetMapping("/interest-rates")
-    public LinkedHashMap<FinancialAsset, Double> getInterestRates() {
-        return this.interestRatesService.getInterestRates();
+    public LinkedList<InterestRate> getInterestRates() {
+        return this.interestRatesService.getInterestRates().stream()
+                            .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
+                            .collect(Collectors.toCollection(LinkedList::new));
     }
 
     /** 
