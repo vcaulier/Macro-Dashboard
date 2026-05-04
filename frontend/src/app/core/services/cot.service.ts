@@ -10,7 +10,7 @@ import { Asset, ASSETS } from '../../models/asset.model';
 export class CotService implements OnDestroy {
 
   private http = inject(HttpClient);
-  private base = 'http://127.0.0.1:8081/api/cot-data';
+  private base = '/api/cot-data';
   
   private cache = new Map<Asset, CotNetData[]>();
   private allRecords$ = new ReplaySubject<CotNetData[]>(1);

@@ -9,7 +9,7 @@ import { ASSETS } from '../../models/asset.model';
 })
 export class InterestRatesService {
   private http = inject(HttpClient);
-  private base = 'http://127.0.0.1:8081/api/interest-rates';
+  private base = '/api/interest-rates';
   
   private cache: InterestRate[] = [];
   private allRecords$ = new ReplaySubject<InterestRate[]>(1);
