@@ -18,7 +18,7 @@ And you need API keys for external data sources (see Configuration below)
 - Interest Rates of countries for main Forex assets - from /api/interest-rates
 - Economical news with their planning - from /api/news-calendar
 
-### Frontend under construction
+### Angular Frontend showing Interest Rates evolution and COT positionning
 
 ## Sources :
 1. CFTC, using Commitments reports Of Traders
@@ -57,11 +57,7 @@ CFTC_SECRET=your_client_secret_here
 > Data is therefore always 3 to 6 days behind the current date — this is expected behaviour, not a bug.
 
 
-**Finnhub Calendar API** (optionnal, but required for economic calendar)
-
-Please note that this service can still stay down if you prefer,
-just don't set the .env variable if you want to use
-another news calendar service.
+**Finnhub Calendar API** (required for economic calendar and to get interest rates evolution)
 
 1. Create a free account on [Finnhub.io](https://www.finnhub.io)
 2. Generate your API key from your profile
@@ -73,5 +69,4 @@ another news calendar service.
 ```
 
 Notes:
-- The free tier is limited to 60 request every minute. This application refreshes every 5 minutes by default.
-- And if you prefer to use another economic calendar service, simply don't set this env variable, and the application won't serve calendar news.
+- Finnhub free tier is limited to 60 request every minute. This application refreshes every 5 minutes by default.
