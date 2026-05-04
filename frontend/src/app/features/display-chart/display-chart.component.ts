@@ -186,19 +186,36 @@ export class DisplayChartComponent implements AfterViewInit {
     this.ratesService.loadAll().subscribe(() => {
 
       const history = this.ratesService.getRateHistory();
+
+      const twelveMonthsAgo = new Date();
+      twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1);
+
+      const cutoff = twelveMonthsAgo.toISOString().split('T')[0];
+
       const allDates = [...new Set(history.map(e => e.date))]
-                    .sort((a, b) => a < b ? -1 : 1);
+                    .sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
+                    .filter(date => date >= cutoff);
 
       const forexAssets = ASSETS.filter(a => !['GOLD', 'SILVER', 'USOIL'].includes(a));
 
       const datasets = forexAssets.map(asset => {
+
         const assetHistory = history.filter(e => e.asset === asset);
-        let lastRate: number | null = null;
+
+        const beforeCutoff = assetHistory.filter(e => e.date < cutoff);
+
+        let lastRate: number | null = beforeCutoff.length > 0 
+          ? beforeCutoff[beforeCutoff.length - 1].interestRate 
+          : null;
+      
         const data = allDates.map(date => {
+
           const entry = assetHistory.find(e => e.date === date);
           if (entry) lastRate = entry.interestRate;
+
           return lastRate;
         });
+        
         return {
           label: asset,
           data,

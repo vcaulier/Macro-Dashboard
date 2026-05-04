@@ -59,6 +59,7 @@ public class NewsCalendarService {
     private void initNewsRecords() {
         try {
             this.updateNewsRecords();
+            this.checkPastNewsRecords();
         } catch(Exception e) {
             log.error("Could not initialize news records on startup: {}. Will retry on next request.", e);
         }
@@ -130,7 +131,7 @@ public class NewsCalendarService {
             .collect(Collectors.toCollection(LinkedList::new));
     }
 
-    public void checkPastNewsRecords() throws ParserConfigurationException {
+    private void checkPastNewsRecords() throws ParserConfigurationException {
 
         LocalDate now = LocalDate.now();
 
@@ -141,7 +142,7 @@ public class NewsCalendarService {
 
         LinkedList<NewsRecord> news = new LinkedList<>();
 
-        for (int i = 13; i > 0; i--) {
+        for (int i = 19; i > 0; i--) {
 
             LocalDate pastDate = now.minusMonths(i);
             LocalDate recentDate = now.minusMonths(i-1);
