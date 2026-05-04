@@ -16,7 +16,9 @@ export class InterestRatesComponent implements OnInit {
   rates = signal<InterestRate[]>([]);
 
   ngOnInit() {
-    this.ratesService.getRates().subscribe(data => this.rates.set(data));
+    this.ratesService.loadAll().subscribe(() => {
+      this.rates.set(this.ratesService.getLatestRates());
+    });
   }
 
 }

@@ -4,8 +4,8 @@
 
   <div class="rate-list">
     <div class="rate-card" *ngFor="let r of rates()">
-      <span class="currency">{{ r.currency }}</span>
-      <span class="rate-value">{{ r.rate | number:'1.2-2' }}%</span>
+      <span class="asset">{{ r.asset.toString() }}</span>
+      <span class="rate-value">{{ r.interestRate }}%</span>
     </div>
   </div>
 </div>

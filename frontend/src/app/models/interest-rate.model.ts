@@ -1,4 +1,7 @@
+import { Asset } from "./asset.model";
+
 export interface InterestRate {
-  currency: string;
-  rate: number;
+  date: Date;
+  asset: Asset;
+  interestRate: number;
 }

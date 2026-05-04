@@ -63,6 +63,7 @@ export class CotChartComponent implements AfterViewInit {
 
   assets = ASSETS;
   selectedAsset = signal<Asset>('EUR');
+  selectedRates = signal<boolean>(false);
 
   chartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
