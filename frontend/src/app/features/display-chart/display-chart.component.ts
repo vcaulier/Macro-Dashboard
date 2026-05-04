@@ -1,10 +1,12 @@
 import { Component, AfterViewInit, inject, signal, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartData, Chart, registerables } from 'chart.js';
+import { ChartConfiguration, Chart, registerables } from 'chart.js';
 import { CotService } from '../../core/services/cot.service';
 import { Asset, ASSETS } from '../../models/asset.model';
 import { CotNetData } from '../../models/cot.model';
+import { InterestRatesService } from '../../core/services/interest-rates.service';
+import { InterestRate } from '../../models/interest-rate.model';
 
 const crosshairPlugin = {
   id: 'crosshair',
@@ -49,22 +51,35 @@ const zeroLinePlugin = {
 Chart.register(...registerables, crosshairPlugin, zeroLinePlugin);
 
 @Component({
-  selector: 'app-cot-chart',
+  selector: 'app-display-chart',
   standalone: true,
   imports: [CommonModule, BaseChartDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './cot-chart.component.html',
-  styleUrl: './cot-chart.component.scss'
+  changeDetection: ChangeDetectionStrategy.Default,
+  templateUrl: './display-chart.component.html',
+  styleUrl: './display-chart.component.scss'
 })
-export class CotChartComponent implements AfterViewInit {
+export class DisplayChartComponent implements AfterViewInit {
+
+  private readonly RATE_COLORS: Partial<Record<Asset, string>> = {
+    AUD: '#4f8ef7',
+    GBP: '#e8a04d',
+    USD: '#a47fd4',
+    EUR: '#4bc08a',
+    JPY: '#f74f4f',
+    CAD: '#f7c94f',
+    NZD: '#4fd4d4',
+    CHF: '#d4d4d4'
+  };
 
   private cotService = inject(CotService);
   private cdr = inject(ChangeDetectorRef);
 
-  assets = ASSETS;
-  selectedAsset = signal<Asset>('EUR');
-  selectedRates = signal<boolean>(false);
+  private ratesService = inject(InterestRatesService);
+  isRatesView = signal(false);
 
+  assets = ASSETS;
+  selectedAsset = signal<Asset | null>(null);
+  
   chartData: ChartConfiguration<'line'>['data'] = {
     labels: [],
     datasets: [
@@ -81,7 +96,7 @@ export class CotChartComponent implements AfterViewInit {
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 0 },
-
+    events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'mouseover'],
     interaction: {
       mode: 'index',
       intersect: false
@@ -101,6 +116,9 @@ export class CotChartComponent implements AfterViewInit {
         callbacks: {
           label: (ctx: any) => {
             const y: number = ctx.parsed?.y ?? 0;
+            if (this.isRatesView()) {
+              return ` ${ctx.dataset.label}: ${y.toFixed(2)}%`;
+            }
             const formatted = Math.abs(y) >= 1000
               ? (y / 1000).toFixed(1) + 'k'
               : y.toString();
@@ -121,7 +139,12 @@ export class CotChartComponent implements AfterViewInit {
         grid: { color: 'rgba(255,255,255,0.05)' },
         ticks: {
           color: '#8892a4',
-          callback: (v: any) => Math.abs(v) >= 1000 ? (v / 1000).toFixed(0) + 'k' : v
+          callback: (v: any) => {
+            if (this.isRatesView()) {
+              return `${v}%`;
+            }
+            return Math.abs(v) >= 1000 ? (v / 1000).toFixed(0) + 'k' : v;
+          }
         },
         border: { dash: [4, 4] }
       }
@@ -159,16 +182,62 @@ export class CotChartComponent implements AfterViewInit {
     this.chartDirective?.update('none');
   }
 
+  private updateRatesChart() {
+    this.ratesService.loadAll().subscribe(() => {
+
+      const history = this.ratesService.getRateHistory();
+      const allDates = [...new Set(history.map(e => e.date))]
+                    .sort((a, b) => a < b ? -1 : 1);
+
+      const forexAssets = ASSETS.filter(a => !['GOLD', 'SILVER', 'USOIL'].includes(a));
+
+      const datasets = forexAssets.map(asset => {
+        const assetHistory = history.filter(e => e.asset === asset);
+        let lastRate: number | null = null;
+        const data = allDates.map(date => {
+          const entry = assetHistory.find(e => e.date === date);
+          if (entry) lastRate = entry.interestRate;
+          return lastRate;
+        });
+        return {
+          label: asset,
+          data,
+          borderColor: this.RATE_COLORS[asset] ?? '#ffffff',
+          fill: false,
+          pointRadius: 0,
+          tension: 0,
+          borderWidth: 1.5,
+          spanGaps: true
+        };
+      });
+
+      this.chartData = { labels: allDates, datasets } as any;
+      this.cdr.markForCheck();
+      this.chartDirective?.update('none');
+    });
+  }
+
   selectAsset(asset: Asset) {
+    this.isRatesView.set(false);
     this.selectedAsset.set(asset);
     const data = this.cotService.getByAsset(asset);
     if (data.length > 0) this.updateChartData(data);
   }
 
+  selectRates() {
+    this.isRatesView.set(true);
+    this.selectedAsset.set(null);
+    this.updateRatesChart();
+  }
+
   ngAfterViewInit() {
+    this.selectedAsset.set('EUR');
     this.cotService.loadAll().subscribe(() => {
-      const data = this.cotService.getByAsset(this.selectedAsset());
-      this.updateChartData(data);
+      const asset = this.selectedAsset();
+      if (asset != null) {
+        const data = this.cotService.getByAsset(asset);
+        this.updateChartData(data);
+      }
     });
   }
 }

@@ -1,8 +1,8 @@
-<div class="cot-panel">
+<div class="display-panel">
   <div class="panel-header">
     <div>
-      <h2>COT Positioning</h2>
-      <p class="subtitle">Institutionnals vs Retails net positions (52 weeks)</p>
+      <h2>{{ isRatesView() ? 'Interest Rates Evolution' : 'COT Positioning' }}</h2>
+      <p class="subtitle">{{ isRatesView() ? 'Central bank rates over 12 months' : 'Institutionnals vs Retails net positions (52 weeks)' }}</p>
     </div>
   </div>
 
@@ -13,6 +13,8 @@
       (click)="selectAsset(a)">
       {{ a }}
     </button>
+    <button [class.active]="isRatesView()"
+        (click)="selectRates()">RATES</button>
   </div>
 
   <div class="chart-wrap">

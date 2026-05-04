@@ -23,9 +23,14 @@ export class InterestRatesService {
     const latestMap = new Map<string, InterestRate>(); 
     for (const asset of ASSETS) {
       const assetRates = this.cache.filter(element => element.asset === asset);
+      if (assetRates.length === 0) {
+        continue;
+      }
       const sorted = assetRates.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
       const latestRate = sorted[sorted.length - 1];
-      latestMap.set(asset, latestRate);   
+      if (latestRate) {
+        latestMap.set(asset, latestRate);
+      }   
     }
     return Array.from(latestMap.values())
       .sort((a, b) => b.interestRate - a.interestRate);

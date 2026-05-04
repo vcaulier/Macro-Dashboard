@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CotChartComponent } from './cot-chart.component';
+import { CotChartComponent } from './display-chart.component';
 
 describe('CotChartComponent', () => {
   let component: CotChartComponent;
