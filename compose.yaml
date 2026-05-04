@@ -8,14 +8,24 @@ services:
       environment:
         - SPRING_PROFILES_ACTIVE=prod
         - FINNHUB_API_KEY=${FINNHUB_API_KEY:-}
+        - CFTC_API_KEY=${CFTC_API_KEY:-}
+        - CFTC_SECRET=${CFTC_SECRET:-}
       restart: unless-stopped
+      networks:
+        - macro-network
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "4200:80"
+      - "4200:4200"
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - macro-network
+
+networks:
+  macro-network:
+    driver: bridge

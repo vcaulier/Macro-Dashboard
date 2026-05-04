@@ -1,14 +1,24 @@
 package com.vcaulier.macrodashboard.service;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -29,20 +39,83 @@ public class CotService {
     @Value("${cftc.api.url}")
     private String CFTC_API_URL;
 
+    @Value("${cftc.api.key.id}")
+    private String API_KEY_ID;
+
+    @Value("${cftc.api.key.secret}")
+    private String API_SECRET;
+
     /**
-     * Getting raw JSON nodes from CFTC JSON url 
+     * Building a Rest Template providing higher timeouts to call CFTC service
      * 
-     * @return raw data, built from JSON nodes
+     * @return our Rest Template to be used by CotService
      */
-    private List<JsonNode> getRawDataAsJson() {
+    private RestTemplate buildRestTemplate() {
+        // Timeout 30s connect, 60s read pour absorber les lenteurs de l'API
+        HttpComponentsClientHttpRequestFactory factory =
+            new HttpComponentsClientHttpRequestFactory();
+        factory.setConnectionRequestTimeout(30000);
+        factory.setReadTimeout(60000);
+        return new RestTemplate(factory);
+    }
 
-        RestTemplate restTemplate = new RestTemplate();
-        JsonNode[] nodes = restTemplate.getForObject(CFTC_API_URL, JsonNode[].class);
+    /**
+     * Get raw data and JsonNodes for a specific FinancialAsset
+     */
+    private List<JsonNode> getRawDataForAsset(FinancialAsset asset) {
 
-        List<JsonNode> result = new ArrayList<>(Arrays.asList(nodes));
+        String fromDate = LocalDate.now().minusWeeks(52)
+            .format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-        return result;
+        String body = String.format("""
+            {
+            "query": "SELECT * WHERE report_date_as_yyyy_mm_dd >= '%s' AND contract_market_name = '%s' ORDER BY report_date_as_yyyy_mm_dd ASC",
+            "page": { "pageNumber": 1, "pageSize": 100 },
+            "includeSynthetic": false
+            }
+            """, fromDate, asset.getCftcCode());
 
+        String credentials = Base64.getEncoder().encodeToString(
+            (API_KEY_ID + ":" + API_SECRET).getBytes(StandardCharsets.UTF_8)
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Basic " + credentials);
+
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
+
+        RestTemplate restTemplate = buildRestTemplate();
+        ResponseEntity<JsonNode[]> response = restTemplate.exchange(
+            CFTC_API_URL,
+            HttpMethod.POST,
+            request,
+            JsonNode[].class
+        );
+
+        return new ArrayList<>(Arrays.asList(response.getBody()));
+    }
+
+    /**
+     * CotRecords creation from raw JSON data
+     * 
+     * @return LinkedList of CotRecord, sorted by date
+     */
+    public LinkedList<CotRecord> createCotRecords() {
+
+        return Stream.of(FinancialAsset.values())
+            .flatMap(asset -> {
+                try {
+                    return getRawDataForAsset(asset).stream()
+                        .map(this::parseRow)
+                        .filter(r -> r.getAsset() != null && r.getDate() != null);
+                } catch (Exception e) {
+                    // Un asset en erreur ne bloque pas les autres
+                    return Stream.empty();
+                }
+            })
+            .sorted(Comparator.comparing(CotRecord::getDate))
+            .collect(Collectors.toCollection(LinkedList::new));
     }
 
     /**
@@ -128,23 +201,6 @@ public class CotService {
             nonReportableLong - nonReportableShort,
             openInterest
         );
-    }
-
-    /**
-     * CotRecords creation from raw JSON data
-     * 
-     * @return LinkedList of CotRecord, sorted by date
-     */
-    public LinkedList<CotRecord> createCotRecords() {
-
-        LinkedList<CotRecord> result = this.getRawDataAsJson().stream()
-            .map((JsonNode row) -> parseRow(row))
-            .filter(record -> record.getAsset() != null && record.getCategory() != null)
-            .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
-            .collect(Collectors.toCollection(LinkedList::new));
-
-        return result;
-
     }
 
 }

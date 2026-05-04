@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { DisplayChartComponent } from './features/display-chart/display-chart.component';
+import { InterestRatesComponent } from './features/interest-rates/interest-rates.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [DisplayChartComponent, InterestRatesComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

@@ -2,8 +2,9 @@ package com.vcaulier.macrodashboard.service;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -12,9 +13,8 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.w3c.dom.Document;
@@ -25,6 +25,8 @@ import org.xml.sax.SAXException;
 import org.yaml.snakeyaml.util.Tuple;
 
 import com.vcaulier.macrodashboard.model.FinancialAsset;
+import com.vcaulier.macrodashboard.model.InterestRate;
+import com.vcaulier.macrodashboard.model.NewsRecord;
 
 import jakarta.annotation.PostConstruct;
 
@@ -44,16 +46,19 @@ public class InterestRateService {
 
     private RestTemplate restTemplate = new RestTemplate();
 
+    @Autowired
+    private NewsCalendarService newsCalendarService;
+
     /**
      * Main data of this service, containing actual interest rates of the Forex market
      */
-    private LinkedHashMap<FinancialAsset, Double> interestRates;
+    private static LinkedList<InterestRate> interestRates = new LinkedList<>();
 
     /**
      * @return Simple getter of sorted HashMap by interest rate, of each rate by financial asset
      */
-    public LinkedHashMap<FinancialAsset, Double> getInterestRates() {
-        return this.interestRates;
+    public LinkedList<InterestRate> getInterestRates() {
+        return interestRates;
     }
 
     /**
@@ -62,9 +67,9 @@ public class InterestRateService {
     @PostConstruct
     private void initInterestRates() {
         try {
-            this.updateInterestRates();
+            this.createInterestRates();
         } catch(Exception e) {
-            log.error("Could not initialize interest rates on startup: {}. Will retry on next request.");
+            log.error("Could not initialize interest rates on startup: {}.", e);
         }
     }
 
@@ -80,12 +85,17 @@ public class InterestRateService {
     }
 
     /**
-     * Interest rates won't move frequently, this method updates interest rates, but only once a day
+     * This method init past interest rates
      */
-    @Scheduled(cron = "0 0 2 * * *")
-    private void updateInterestRates() throws ParserConfigurationException {
+    private void createInterestRates() throws ParserConfigurationException {
 
-        String xml = restTemplate.getForObject(INTEREST_RATES_BASE_URL, String.class);
+        LocalDate startDate = LocalDate.now().minusMonths(13).withDayOfMonth(1);
+        String pastYear = String.valueOf(startDate.getYear());
+        String currentMonth = startDate.getMonthValue() < 10 ? 
+                    "0" + String.valueOf(startDate.getMonthValue()) : String.valueOf(startDate.getMonthValue());
+
+        String xml = restTemplate.getForObject(INTEREST_RATES_BASE_URL 
+            + pastYear + "-" + currentMonth + "-" + "01", String.class);
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
@@ -115,14 +125,27 @@ public class InterestRateService {
             throw new ParserConfigurationException("InterestRateService error : Cannot parse actual XML data source");
         }
 
-        this.interestRates = rates.entrySet().stream()
-            .sorted(Map.Entry.<FinancialAsset, Double>comparingByValue().reversed())
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                (a, b) -> a,
-                LinkedHashMap::new
-            ));
+        rates.entrySet().stream()
+            .map(entry -> new InterestRate(startDate, entry.getKey(), entry.getValue()))
+            .forEach(rate -> interestRates.push(rate));
+
+        this.newsCalendarService.checkPastNewsRecords();
+        
+    }
+
+    /**
+     * This method will add a new interest rate record, from a news record
+     * @param record A news record of an interest rate decision
+     */
+    public static void addNewInterestRate(NewsRecord record) {
+        if (!record.getEventName().contains("Interest Rate Decision")
+             || record.getActualValue() == null || record.getAsset() == null) {
+            return;
+        }
+        InterestRate rate = new InterestRate(record.getDateTime().toLocalDate(), record.getAsset(), record.getActualValue());
+        if (!interestRates.contains(rate)) {
+            interestRates.push(rate);
+        }
     }
 
 }

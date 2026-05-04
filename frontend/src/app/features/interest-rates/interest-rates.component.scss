@@ -1,0 +1,27 @@
+.rates-panel {
+  background: #191c24;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+h2 { font-size: 18px; font-weight: 500; color: #e2e8f0; }
+.subtitle { font-size: 13px; color: #8892a4; margin-top: 2px; margin-bottom: 1rem; }
+
+.rate-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.02);
+}
+
+.asset { font-weight: 500; font-size: 15px; color: #e2e8f0; }
+
+.rate-right { display: flex; align-items: center; gap: 8px; }
+.rate-value { font-size: 20px; font-weight: 500; color: #e2e8f0; }

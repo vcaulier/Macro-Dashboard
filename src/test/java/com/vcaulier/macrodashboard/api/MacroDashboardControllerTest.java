@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.vcaulier.macrodashboard.model.CotRecord;
 import com.vcaulier.macrodashboard.model.FinancialAsset;
+import com.vcaulier.macrodashboard.model.InterestRate;
 import com.vcaulier.macrodashboard.service.CotService;
 import com.vcaulier.macrodashboard.service.InterestRateService;
 
@@ -111,31 +112,36 @@ public class MacroDashboardControllerTest {
 
     @Test
     public void testGetInterestRates() {
-        LinkedHashMap<FinancialAsset, Double> mockRates = new LinkedHashMap<>();
-        mockRates.put(FinancialAsset.USD, 5.5);
-        mockRates.put(FinancialAsset.GBP, 3.0);
-        mockRates.put(FinancialAsset.EUR, 2.25);
-        mockRates.put(FinancialAsset.AUD, -0.75);
+        LocalDate now = LocalDate.now();
+        LinkedList<InterestRate> mockRates = new LinkedList<>();
+        mockRates.add(new InterestRate(now, FinancialAsset.USD, 5.5));
+        mockRates.add(new InterestRate(now, FinancialAsset.GBP, 3.0));
+        mockRates.add(new InterestRate(now, FinancialAsset.EUR, 2.25));
+        mockRates.add(new InterestRate(now, FinancialAsset.AUD, -0.75));
 
         when(interestRateService.getInterestRates()).thenReturn(mockRates);
 
-        LinkedHashMap<FinancialAsset, Double> result = controller.getInterestRates();
+        LinkedList<InterestRate> result = controller.getInterestRates();
 
         assertNotNull(result);
         assertEquals(4, result.size());
-        assertEquals(5.5, result.get(FinancialAsset.USD));
-        assertEquals(3.0, result.get(FinancialAsset.GBP));
-        assertEquals(2.25, result.get(FinancialAsset.EUR));
-        assertEquals(-0.75, result.get(FinancialAsset.AUD));
+        assertTrue(result.stream().anyMatch(entry -> entry.getAsset().equals(FinancialAsset.USD)
+                                            && entry.getInterestRate() == 5.5));
+        assertTrue(result.stream().anyMatch(entry -> entry.getAsset().equals(FinancialAsset.GBP)
+                                            && entry.getInterestRate() == 3.0));
+        assertTrue(result.stream().anyMatch(entry -> entry.getAsset().equals(FinancialAsset.EUR)
+                                            && entry.getInterestRate() == 2.25));
+        assertTrue(result.stream().anyMatch(entry -> entry.getAsset().equals(FinancialAsset.AUD)
+                                            && entry.getInterestRate() == -0.75));
 
         verify(interestRateService, times(1)).getInterestRates();
     }
 
     @Test
     public void testGetInterestRatesFromEmptyMap() {
-        when(interestRateService.getInterestRates()).thenReturn(new LinkedHashMap<>());
+        when(interestRateService.getInterestRates()).thenReturn(new LinkedList<>());
 
-        LinkedHashMap<FinancialAsset, Double> result = controller.getInterestRates();
+        LinkedList<InterestRate> result = controller.getInterestRates();
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -144,21 +150,21 @@ public class MacroDashboardControllerTest {
 
     @Test
     public void testGetInterestRatesPreservesOrder() {
-        LinkedHashMap<FinancialAsset, Double> mockRates = new LinkedHashMap<>();
-        mockRates.put(FinancialAsset.USD, 5.5);
-        mockRates.put(FinancialAsset.GBP, 5.0);
-        mockRates.put(FinancialAsset.EUR, 4.25);
-        mockRates.put(FinancialAsset.JPY, 0.1);
+        LocalDate now = LocalDate.now();
+        LinkedList<InterestRate> mockRates = new LinkedList<>();
+        mockRates.add(new InterestRate(now.minusDays(4), FinancialAsset.USD, 5.5));
+        mockRates.add(new InterestRate(now.minusDays(7), FinancialAsset.GBP, 5.0));
+        mockRates.add(new InterestRate(now.minusDays(3), FinancialAsset.EUR, 4.25));
+        mockRates.add(new InterestRate(now, FinancialAsset.AUD, 0.1));
 
         when(interestRateService.getInterestRates()).thenReturn(mockRates);
 
-        LinkedHashMap<FinancialAsset, Double> result = controller.getInterestRates();
+        LinkedList<InterestRate> result = controller.getInterestRates();
 
-        var keys = result.keySet().stream().toList();
-        assertEquals(FinancialAsset.USD, keys.get(0));
-        assertEquals(FinancialAsset.GBP, keys.get(1));
-        assertEquals(FinancialAsset.EUR, keys.get(2));
-        assertEquals(FinancialAsset.JPY, keys.get(3));
+        assertEquals(FinancialAsset.GBP, result.get(0).getAsset());
+        assertEquals(FinancialAsset.USD, result.get(1).getAsset());
+        assertEquals(FinancialAsset.EUR, result.get(2).getAsset());
+        assertEquals(FinancialAsset.AUD, result.get(3).getAsset());
     }
 
 }
